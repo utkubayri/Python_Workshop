@@ -1,52 +1,54 @@
-import time
-from web3 import Web3 # pip install web3
-from web3.auto import w3
+
+from web3 import Web3
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+import time
 
 
+def claim_zkelon_airdrop():
+    # Connect to an Ethereum node
+    web3 = Web3(Web3.HTTPProvider('https://eth-mainnet.g.alchemy.com/v2/DRp5oFKJMH0s5PXVag4Nmccnc1ep70-u'))
 
-# Tarayıcıyı başlat
-driver = webdriver.Chrome()
+    while True:
+        # Generate a new Ethereum account
+        account = web3.eth.account.create()
+        private_key = account._private_key.hex()
 
-# Web sitesini aç
-driver.get("https://www.zkelon.com/airdrop")
+        # Save the private key to the file
+        with open("private_key.txt", "a") as file:
+            file.write(private_key + "\n")
 
-# Belirli bir sayfaya yönlendirildikten sonra bir düğmeye tıkla 4 kere
-for _ in range(4):
-    button = driver.find_element("id", "progress-btn")
-    button.click()
-    time.sleep(1)  # 1 saniye bekleyin
+        # Open the web page
+        driver = webdriver.Chrome()
+        driver.get("https://www.zkelon.com/airdrop")
 
-# Oluşturulan web3 adresini text kutusuna yaz
-address_textbox = driver.find_element("id", "progress-input")
-address = "web3_adresi"
-address_textbox.send_keys(address)
+        # Click on the button four times
+        for i in range(4):
+            button = driver.find_element(By.ID, "progress-btn")
+            button.click()
+            time.sleep(40)
 
-# Web3 cüzdanı oluştur
-account = w3.eth.account.create()
-private_key = account.privateKey.hex()
+        # Enter the address into the input field
+        address_field = driver.find_element(By.ID, 'progress-input')
+        address_field.send_keys(account.address)
 
-# Private key'i txt dosyasına kaydet
-with open("private_key.txt", "w") as file:
-    file.write(private_key)
+        # Click the "Wallet Add" button
+        button = driver.find_element(By.CSS_SELECTOR, 'button[name="walled_add"]')
+        button.click()
 
-# Cüzdan adresini text kutusuna yazdıktan sonra "wallet_add" butonuna tıkla
-wallet_address = "cuzdan_adresi"
-wallet_textbox = driver.find_element("id", "wallet-textbox")
-wallet_textbox.send_keys(wallet_address)
+        # Wait for a while to let the process complete
+        time.sleep(10)
 
-wallet_add_button = driver.find_element("name", "wallet_add-button")
-wallet_add_button.click()
+        # Go back to the first page
+        driver.switch_to.window(driver.window_handles[0])
+        driver.get("https://www.zkelon.com/airdrop")
 
-# Ana sayfaya geri dön
-driver.switch_to.window(driver.window_handles[0])
+        # Close the browser
+        driver.quit()
 
-# İşlemleri tekrarla
-# ...
+        # Wait for some time before generating the next account
+        time.sleep(10)
 
-# Tarayıcıyı kapat
-driver.quit()
+
+if __name__ == "__main__":
+    claim_zkelon_airdrop()
